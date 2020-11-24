@@ -1,20 +1,23 @@
 package pos.machine;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static pos.machine.ItemDataLoader.loadAllItemInfos;
 
 public class PosMachine {
+    static final String NEW_LINE = String.format("%n");
+
+    //    P: in 2 minute
+    //    D: ~3min
+    //    C: test case is sorted manually by barcode, had to change implementation to use SortedMap instead of Map
+    //    A: N/A
     public String printReceipt(List<String> barcodes) {
-        Map<String, Integer> stringIntegerMap =      createItemCountMap(barcodes);
+        SortedMap<String, Integer> stringIntegerMap = createItemCountMap(barcodes);
         List<SubtotalDetails> subtotalDetails = new ArrayList<>();
-        for (:
-             ) {
-            
-        }
+        stringIntegerMap.forEach((barcode, count) -> subtotalDetails.add(
+                getSubtotalDetails(barcode, count)
+        ));
+        return generateReceiptStringFromItems(subtotalDetails);
 
     }
 
@@ -24,8 +27,8 @@ public class PosMachine {
     //    D: ~2min
     //    C: N/A
     //    A: N/A
-    public Map<String, Integer> createItemCountMap(List<String> barcodes) {
-        HashMap<String, Integer> barcodeCountMap = new HashMap<>();
+    public SortedMap<String, Integer> createItemCountMap(List<String> barcodes) {
+        SortedMap<String, Integer> barcodeCountMap = new TreeMap<>();
         barcodes.forEach(s -> {
             if (barcodeCountMap.containsKey(s)) {
                 barcodeCountMap.put(s, barcodeCountMap.get(s) + 1);
@@ -35,7 +38,7 @@ public class PosMachine {
         return barcodeCountMap;
     }
 
-    class SubtotalDetails {
+    static class SubtotalDetails {
         SubtotalDetails(ItemInfo itemInfo, Float subtotal, Integer quantity) {
             this.itemInfo = itemInfo;
             this.subtotal = subtotal;
@@ -47,16 +50,22 @@ public class PosMachine {
         final Integer quantity;
     }
 
+    //    P: <1min
+    //    D: <1min
+    //    C: N/A
+    //    A: N/A
     public SubtotalDetails getSubtotalDetails(String barcode, Integer itemCount) {
         ItemInfo itemInfo = getItemDetailsByBarcode(barcode);
         return new SubtotalDetails(itemInfo, calculateSubtotal((float) itemInfo.getPrice(), itemCount), itemCount);
     }
 
+    //    P: <1min
+    //    D: <1min
+    //    C: N/A
+    //    A: N/A
     public float calculateSubtotal(Float unitPrice, Integer count) {
         return unitPrice * count;
     }
-
-    ;
 
     //    P: in 5 minute
     //    D: ~3min
@@ -71,30 +80,45 @@ public class PosMachine {
         return null;
     }
 
+    //    P: in 3 minute
+    //    D: ~5min
+    //    C: newline difference should be OS depended, had to make a constant
+    //    A: N/A
     public String generateReceiptStringFromItems(List<SubtotalDetails> subtotalDetails) {
         Float total = calculateTotalFromSubtotals(subtotalDetails);
         StringBuilder receipt = new StringBuilder();
+        receipt.append("***<store earning no money>Receipt***").append(NEW_LINE);
         for (SubtotalDetails subtotalDetail : subtotalDetails) {
-            if (receipt.length() != 0)
-                receipt.append("\r\n");
-            receipt.append(generatReceiptRow(subtotalDetail));
+            receipt.append(generateReceiptRow(subtotalDetail));
+            receipt.append(NEW_LINE);
         }
-        receipt.append("----------------------\r\n");
-        receipt.append(String.format("Total: %d (yuan)\r\n", total));
+        receipt.append("----------------------").append(NEW_LINE);
+        receipt.append(String.format("Total: %d (yuan)", (int) total.floatValue())).append(NEW_LINE);
         receipt.append("**********************");
 
         return receipt.toString();
     }
 
-    public String generatReceiptRow(SubtotalDetails subtotalDetails) {
-        return String.format("Name: %s, Quantity: %d, Unit price: %d (yuan), Subtotal: %f.0 (yuan)",
-                subtotalDetails.itemInfo.getName(), subtotalDetails.quantity, subtotalDetails.itemInfo.getPrice(), subtotalDetails.subtotal)
+    //    P: <2min
+    //    D: ~1min
+    //    C: N/A
+    //    A: N/A
+    public String generateReceiptRow(SubtotalDetails subtotalDetails) {
+        return String.format("Name: %s, Quantity: %d, Unit price: %d (yuan), Subtotal: %d (yuan)",
+                subtotalDetails.itemInfo.getName(), subtotalDetails.quantity, subtotalDetails.itemInfo.getPrice(), (int) subtotalDetails.subtotal.floatValue());
     }
 
 
+    //    P: <1min
+    //    D: <1min
+    //    C: N/A
+    //    A: N/A
     public Float calculateTotalFromSubtotals(List<SubtotalDetails> subtotalDetails) {
         Float aFloat = (float) 0;
-        subtotalDetails.forEach(subtotalDetails1 -> aFloat += subtotalDetails1.subtotal;);
+        for (SubtotalDetails subtotalDetails1 : subtotalDetails
+        )
+            aFloat += subtotalDetails1.subtotal;
+
         return aFloat;
     }
 }
